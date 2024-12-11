@@ -78,10 +78,3 @@ Este projeto está licenciado sob a licença [MIT](LICENSE).
 
 ---
 
-## Contribuição
-
-1. Faça um fork do repositório.
-2. Crie um branch para sua feature (`git checkout -b minha-feature`).
-3. Commit suas alterações (`git commit -m 'Adicionando minha feature'`).
-4. Submeta um pull request.
-
