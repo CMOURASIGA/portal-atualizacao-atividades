@@ -49,3 +49,39 @@ Este projeto é uma solução web para atualização e acompanhamento de ativida
 
 ## Estrutura do Projeto
 
+---
+
+## Documentação Técnica
+
+### Endpoints Utilizados
+- **Listar Tarefas**: `/rest/api/3/search`
+- **Atualizar Comentários**: `/rest/api/3/issue/{issueIdOrKey}/comment`
+- **Adicionar Anexo**: `/rest/api/3/issue/{issueIdOrKey}/attachments`
+
+### Campos Personalizados
+- `customfield_10064`: Campo utilizado para a data de conclusão no Jira.
+
+### Fluxo de Atualização
+1. Usuário seleciona projeto e tarefa na interface.
+2. Preenche o comentário e (opcionalmente) anexa um arquivo.
+3. Clica em "Enviar Atualização".
+4. O sistema realiza:
+   - Atualização do comentário via API.
+   - Upload de anexo (se houver).
+   - Confirmação visual da conclusão.
+
+---
+
+## Licença
+
+Este projeto está licenciado sob a licença [MIT](LICENSE).
+
+---
+
+## Contribuição
+
+1. Faça um fork do repositório.
+2. Crie um branch para sua feature (`git checkout -b minha-feature`).
+3. Commit suas alterações (`git commit -m 'Adicionando minha feature'`).
+4. Submeta um pull request.
+
