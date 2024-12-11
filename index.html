@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Portal de Atualização de Atividades</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f7f7f7;
+        margin: 0;
+        padding: 0;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+        background-color: #003366;
+        color: white;
+      }
+
+      header h1 {
+        flex: 1;
+        text-align: center;
+        font-size: 1.5em;
+        margin: 0;
+      }
+
+      header img {
+        height: 70px;
+        border-radius: 50%;
+      }
+
+      form {
+        padding: 20px;
+        background-color: white;
+        margin: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      label {
+        font-weight: bold;
+        color: #003366;
+      }
+
+      select,
+      textarea,
+      input[type="date"] {
+        width: 100%;
+        padding: 8px;
+        margin: 8px 0 16px 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      button {
+        background-color: #003366;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        width: 100%;
+      }
+
+      button:hover {
+        background-color: #002244;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      table th,
+      table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+
+      table th {
+        background-color: #003366;
+        color: white;
+        text-align: left;
+      }
+
+      table tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+
+      table tr:hover {
+        background-color: #ddd;
+      }
+
+      #modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        border: 2px solid #4CAF50;
+        border-radius: 10px;
+        padding: 20px;
+        z-index: 1000;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        font-size: 1.2em;
+        width: 300px;
+        text-align: center;
+      }
+
+      @media (max-width: 768px) {
+        header h1 {
+          font-size: 1.2em;
+        }
+
+        table th,
+        table td {
+          font-size: 0.9em;
+        }
+
+        button {
+          padding: 8px 16px;
+          font-size: 1em;
+        }
+
+        form {
+          margin: 10px;
+          padding: 15px;
+        }
+      }
+
+      input[type="file"] {
+      display: block;
+      margin-top: 8px;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+    }
+    </style>
+    <script>
+      function carregarProjetos() {
+        exibirModal("Carregando projetos...", false);
+
+        google.script.run
+          .withSuccessHandler(preencherProjetos)
+          .withFailureHandler((erro) => {
+            exibirModal(`Erro ao carregar projetos: ${erro.message}`, true);
+          })
+          .buscarProjetos();
+      }
+
+      function preencherProjetos(projetos) {
+        const projetoSelect = document.getElementById("projeto");
+        projetoSelect.innerHTML = '<option value="" disabled selected>Selecione um projeto</option>';
+        projetos.forEach((projeto) => {
+          const option = document.createElement("option");
+          option.value = projeto.key;
+          option.textContent = projeto.name;
+          projetoSelect.appendChild(option);
+        });
+
+        exibirModal("Projetos carregados com sucesso!", false);
+        setTimeout(() => {
+          const modal = document.getElementById("modal");
+          modal.style.display = "none";
+        }, 2000);
+      }
+
+      function carregarCategorias() {
+        const projetoKey = document.getElementById("projeto").value;
+
+        if (!projetoKey) {
+          exibirModal("Por favor, selecione um projeto.", true);
+          return;
+        }
+
+        exibirModal("Carregando categorias...", false);
+
+        google.script.run
+          .withSuccessHandler(preencherCategorias)
+          .withFailureHandler((erro) => {
+            exibirModal(`Erro ao carregar categorias: ${erro.message}`, true);
+          })
+          .buscarCategoriasPorProjeto(projetoKey);
+      }
+
+      function preencherCategorias(categorias) {
+        const categoriaSelect = document.getElementById("categoria");
+        categoriaSelect.innerHTML = '<option value="" disabled selected>Selecione uma categoria</option>';
+        categorias.forEach((categoria) => {
+          const option = document.createElement("option");
+          option.value = categoria;
+          option.textContent = categoria;
+          categoriaSelect.appendChild(option);
+        });
+
+        exibirModal("Categorias carregadas com sucesso!", false);
+        setTimeout(() => {
+          const modal = document.getElementById("modal");
+          modal.style.display = "none";
+        }, 2000);
+      }
+
+      function carregarTarefas() {
+        const projetoKey = document.getElementById("projeto").value;
+        const categoria = document.getElementById("categoria").value;
+
+        if (!projetoKey || !categoria) {
+          exibirModal("Por favor, selecione o projeto e a categoria.", true);
+          return;
+        }
+
+        exibirModal("Carregando tarefas...", false);
+
+        google.script.run
+          .withSuccessHandler(preencherTarefas)
+          .withFailureHandler((erro) => {
+            exibirModal(`Erro ao carregar tarefas: ${erro.message}`, true);
+          })
+          .buscarTarefasPorProjetoECategoria(projetoKey, categoria);
+      }
+      function preencherTarefas(tarefas) {
+        const tabela = document.getElementById("tarefas");
+        tabela.innerHTML = ''; // Limpa a tabela
+        const tarefaSelect = document.getElementById("tarefa");
+        tarefaSelect.innerHTML = '<option value="" disabled selected>Selecione uma tarefa</option>';
+
+        if (tarefas.length === 0) {
+          const row = tabela.insertRow();
+          const cell = row.insertCell();
+          cell.colSpan = 5;
+          cell.textContent = 'Nenhuma tarefa encontrada.';
+          exibirModal("Nenhuma tarefa encontrada.", true);
+          return;
+        }
+
+        // Adiciona cabeçalho à tabela
+        const headerRow = tabela.insertRow();
+        ['Chave', 'Resumo', 'Status', 'Responsável', 'Último Comentário'].forEach((header) => {
+          const cell = headerRow.insertCell();
+          cell.textContent = header;
+          cell.style.fontWeight = 'bold';
+        });
+
+        // Preenche as tarefas na tabela
+        tarefas.forEach((tarefa) => {
+          const row = tabela.insertRow();
+          row.insertCell().textContent = tarefa.key;
+          row.insertCell().textContent = tarefa.summary;
+          row.insertCell().textContent = tarefa.status;
+          row.insertCell().textContent = tarefa.assignee;
+
+          const comentarioCell = row.insertCell();
+
+          // Verifica se existe um comentário válido e formata
+          if (tarefa.lastComment) {
+            const comentarioFormatado = tarefa.lastComment
+              .split("\n")
+              .map(part => `<div>${part}</div>`)
+              .join(''); // Formata cada linha em <div>
+            comentarioCell.innerHTML = comentarioFormatado;
+          } else {
+            comentarioCell.textContent = "Sem comentários";
+          }
+
+          // Adiciona tarefas ao dropdown
+          const option = document.createElement("option");
+          option.value = tarefa.key;
+          option.textContent = `${tarefa.key} - ${tarefa.summary}`;
+          tarefaSelect.appendChild(option);
+        });
+
+        // Fecha o modal ao completar a carga
+        exibirModal("Tarefas carregadas com sucesso!", false);
+        setTimeout(() => {
+          const modal = document.getElementById("modal");
+          modal.style.display = "none";
+        }, 2000);
+      }
+
+      //atualizacao atividade no jira
+      function executarAtualizacao() {
+        const tarefaKey = document.getElementById("tarefa").value;
+        const comentario = document.getElementById("comentario").value;
+        const dataAtualizacao = document.getElementById("dataAtualizacao").value;
+        const dataConclusao = document.getElementById("dataConclusao").value;
+        const anexo = document.getElementById("anexo").files[0]; // Captura o arquivo para o anexo
+
+        if (!tarefaKey || !comentario || !dataAtualizacao) {
+          exibirModal("Preencha todos os campos obrigatórios.", true);
+          return;
+        }
+
+        exibirModal("Processando atualização...", false);
+
+        // Primeiro, atualizar a tarefa
+        google.script.run
+          .withSuccessHandler(() => {
+            exibirModal(`A tarefa ${tarefaKey} foi atualizada com sucesso!`, false);
+
+            // Se houver um anexo, enviar o anexo
+            if (anexo) {
+              const reader = new FileReader();
+              reader.onload = function (event) {
+                const fileContent = event.target.result;
+
+                google.script.run
+                  .withSuccessHandler(() => {
+                    exibirModal(`O anexo foi enviado com sucesso para a tarefa ${tarefaKey}.`, false);
+                    limparCampos(); // Limpa os campos ao final
+                  })
+                  .withFailureHandler((erro) => {
+                    exibirModal(`Erro ao enviar o anexo: ${erro.message}`, true);
+                  })
+                  .enviarAnexo({
+                    tarefaKey: tarefaKey,
+                    nomeArquivo: anexo.name,
+                    conteudoBase64: fileContent.split(",")[1], // Remove o prefixo Base64
+                  });
+              };
+              reader.readAsDataURL(anexo);
+            } else {
+              limparCampos(); // Limpa os campos caso não tenha anexo
+            }
+          })
+          .withFailureHandler((erro) => {
+            exibirModal(`Erro ao atualizar a tarefa: ${erro.message}`, true);
+          })
+          .atualizarTarefa({
+            tarefaKey,
+            comentario,
+            dataAtualizacao,
+            dataConclusao,
+            customFields: {
+              customfield_10094: dataConclusao || null, // Atualiza a data de entrega final se informada
+            },
+          });
+      }
+
+
+
+
+
+      // Função para limpar os campos após o envio
+      function limparCampos() {
+        document.getElementById("tarefa").value = "";
+        document.getElementById("comentario").value = "";
+        document.getElementById("dataAtualizacao").value = "";
+        document.getElementById("dataConclusao").value = "";
+        document.getElementById("anexo").value = ""; // Limpa o campo de upload
+      }
+
+      // Função para exibir mensagens no modal
+      function exibirModal(mensagem, erro) {
+        const modal = document.getElementById("modal");
+        modal.style.display = "block";
+        modal.textContent = mensagem;
+        modal.style.color = erro ? "red" : "green";
+
+        setTimeout(() => {
+          modal.style.display = "none";
+        }, 3000);
+      }
+
+
+
+      window.onload = carregarProjetos;
+    </script>
+  </head>
+  <body>
+    <header>
+      <h1>Portal de Atualização de Atividades dos Projetos de Integração e Incorporação</h1>
+      <img
+        src="https://ugc.production.linktr.ee/39d5ea13-9679-48f8-b122-dd408b7be54f_JOB-8465-Atualiza--o-Linktree-avatar.png?io=true&size=avatar-v3_0"
+        alt="Logo da Empresa"
+      />
+    </header>
+    <form>
+      <label for="projeto">Projeto:</label>
+      <select id="projeto" onchange="carregarCategorias()">
+        <option value="" disabled selected>Selecione um projeto</option>
+      </select>
+
+      <label for="categoria">Categoria:</label>
+      <select id="categoria" onchange="carregarTarefas()">
+        <option value="" disabled selected>Selecione uma categoria</option>
+      </select>
+
+      <label for="tarefa">Tarefa:</label>
+      <select id="tarefa">
+        <option value="" disabled selected>Selecione uma tarefa</option>
+      </select>
+
+      <label for="comentario">Comentário:</label>
+      <textarea id="comentario" rows="4" required></textarea>
+
+      <label for="dataAtualizacao">Data de Atualização:</label>
+      <input type="date" id="dataAtualizacao" required />
+
+      <label for="dataConclusao">Data de Conclusão (opcional):</label>
+      <input type="date" id="dataConclusao" />
+
+      <label for="anexo">Anexo (opcional):</label>
+      <input type="file" id="anexo" />
+
+
+      <button type="button" onclick="executarAtualizacao()">Enviar Atualização</button>
+    </form>
+
+    <h2>Tarefas</h2>
+    <table id="tarefas"></table>
+
+    <div id="modal">
+      <span id="modal-content"></span>
+    </div>
+  </body>
+</html>
+
+
+
